@@ -108,14 +108,16 @@ class JsonTest < Minitest::Test
   def test_write_ndjson_io
     df = Polars::DataFrame.new({"a" => [1, 2, 3], "b" => ["one", "two", "three"]})
     io = StringIO.new
-    df.write_ndjson(io)
+    df.lazy.sink_ndjson(io, engine: "in-memory")
     io.rewind
     assert_frame df, Polars.read_ndjson(io)
   end
 
   def test_write_ndjson_nil
     df = Polars::DataFrame.new({"a" => [1, 2, 3], "b" => ["one", "two", "three"]})
-    io = StringIO.new(df.write_ndjson)
+    io = StringIO.new
+    df.lazy.sink_ndjson(io, engine: "in-memory")
+    io.rewind
     assert_frame df, Polars.read_ndjson(io)
   end
 
@@ -129,7 +131,7 @@ class JsonTest < Minitest::Test
   def test_sink_ndjson_io
     df = Polars::DataFrame.new({"a" => [1, 2, 3], "b" => ["one", "two", "three"]})
     io = StringIO.new
-    assert_nil df.lazy.sink_ndjson(io)
+    assert_nil df.lazy.sink_ndjson(io, engine: "in-memory")
     io.rewind
     assert_frame df, Polars.read_ndjson(io)
   end

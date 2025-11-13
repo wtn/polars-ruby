@@ -210,21 +210,27 @@ class TypesTest < Minitest::Test
   # only fully tested in stress mode
   def test_object_stress
     df = Polars::DataFrame.new({a: [Object.new]})
+    lf = df.lazy
     io = StringIO.new
+
     assert_raises(Polars::ComputeError) do
-      df.write_csv(io)
+      lf.sink_csv(io, engine: "in-memory")
     end
+    io.rewind
     assert_raises(Polars::ComputeError) do
-      df.write_parquet(io)
+      lf.sink_parquet(io, engine: "in-memory")
     end
+    io.rewind
     assert_raises(Polars::ComputeError) do
       df.write_json(io)
     end
+    io.rewind
     assert_raises(Polars::ComputeError) do
-      df.write_ndjson(io)
+      lf.sink_ndjson(io, engine: "in-memory")
     end
+    io.rewind
     assert_raises(Polars::ComputeError) do
-      df.write_ipc(io)
+      lf.sink_ipc(io, engine: "in-memory")
     end
     assert_raises(Polars::ComputeError) do
       df.serialize

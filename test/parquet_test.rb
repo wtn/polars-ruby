@@ -107,7 +107,7 @@ class ParquetTest < Minitest::Test
   def test_write_parquet_io
     df = Polars::DataFrame.new({"a" => [1, 2, 3], "b" => ["one", "two", "three"]})
     io = StringIO.new
-    df.write_parquet(io)
+    df.lazy.sink_parquet(io, engine: "in-memory")
     io.rewind
     assert_frame df, Polars.read_parquet(io)
   end
@@ -136,7 +136,7 @@ class ParquetTest < Minitest::Test
   def test_sink_parquet_io
     df = Polars::DataFrame.new({"a" => [1, 2, 3], "b" => ["one", "two", "three"]})
     io = StringIO.new
-    assert_nil df.lazy.sink_parquet(io)
+    assert_nil df.lazy.sink_parquet(io, engine: "in-memory")
     io.rewind
     assert_frame df, Polars.read_parquet(io)
   end

@@ -40,14 +40,17 @@ class IpcTest < Minitest::Test
   def test_write_ipc_io
     df = Polars::DataFrame.new({"a" => [1, 2, 3], "b" => ["one", "two", "three"]})
     io = StringIO.new
-    df.write_ipc(io)
+    df.lazy.sink_ipc(io, engine: "in-memory")
     io.rewind
     assert_frame df, Polars.read_ipc(io)
   end
 
   def test_write_ipc_to_string
     df = Polars::DataFrame.new({"a" => [1, 2, 3], "b" => ["one", "two", "three"]})
-    output = df.write_ipc(nil)
+    io = StringIO.new
+    io.set_encoding(Encoding::BINARY)
+    df.lazy.sink_ipc(io, engine: "in-memory")
+    output = io.string
     assert output.start_with?("ARROW")
     assert_equal Encoding::BINARY, output.encoding
   end
@@ -69,7 +72,7 @@ class IpcTest < Minitest::Test
   def test_sink_ipc_io
     df = Polars::DataFrame.new({"a" => [1, 2, 3], "b" => ["one", "two", "three"]})
     io = StringIO.new
-    assert_nil df.lazy.sink_ipc(io)
+    assert_nil df.lazy.sink_ipc(io, engine: "in-memory")
     io.rewind
     assert_frame df, Polars.read_ipc(io)
   end
