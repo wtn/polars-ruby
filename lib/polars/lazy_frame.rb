@@ -486,6 +486,13 @@ module Polars
         .collect
       )
 
+      # cast temporal columns to string before row extraction to
+      # avoid Rust panic on tz-aware datetimes
+      temporal_casts = df_metrics.columns.select do |c|
+        df_metrics[c].dtype.temporal?
+      end.map { |c| F.col(c).cast(String) }
+      df_metrics = df_metrics.with_columns(temporal_casts) if temporal_casts.any?
+
       # reshape wide result
       n_metrics = metrics.length
       column_metrics =
