@@ -17,8 +17,23 @@ class SeriesTest < Minitest::Test
   end
 
   def test_new_binary
-    s = Polars::Series.new(["a".b, "b".b, "c".b])
-    assert_series ["a", "b", "c"], s, dtype: Polars::Binary
+    s = Polars::Series.new(["\xFF\xFE".b, "\xC3\x28".b])
+    assert_series ["\xFF\xFE".b, "\xC3\x28".b], s, dtype: Polars::Binary
+  end
+
+  def test_new_string_non_utf8_encoding
+    s = Polars::Series.new(["s".dup.force_encoding("US-ASCII")])
+    assert_series ["s"], s, dtype: Polars::String
+  end
+
+  def test_new_string_binary_encoding_valid_utf8
+    s = Polars::Series.new(["s".dup.force_encoding("ASCII-8BIT")])
+    assert_series ["s"], s, dtype: Polars::String
+  end
+
+  def test_new_binary_explicit_dtype
+    s = Polars::Series.new(["s".b], dtype: Polars::Binary)
+    assert_series ["s".b], s, dtype: Polars::Binary
   end
 
   def test_new_bool

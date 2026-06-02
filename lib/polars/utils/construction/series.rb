@@ -168,10 +168,10 @@ module Polars
       else
         constructor =
           if value.is_a?(::String)
-            if value.encoding == Encoding::UTF_8
-              RbSeries.method(:new_str)
-            else
+            if value.encoding == Encoding::BINARY && !value.dup.force_encoding(Encoding::UTF_8).valid_encoding?
               RbSeries.method(:new_binary)
+            else
+              RbSeries.method(:new_str)
             end
           elsif value.is_a?(Integer) && values.any? { |v| v.is_a?(Float) }
             # TODO improve performance

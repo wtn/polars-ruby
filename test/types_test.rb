@@ -17,7 +17,7 @@ class TypesTest < Minitest::Test
       f: 1.5,
       c: BigDecimal("1.5"),
       s: "one",
-      n: "two".b,
+      n: "\xFF\xFE".b,
       d: Date.today,
       t: Time.now,
       z: Time.now.in_time_zone("Eastern Time (US & Canada)"),

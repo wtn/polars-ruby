@@ -398,10 +398,14 @@ pub fn lit(rb: &Ruby, value: Value, allow_object: bool, is_scalar: bool) -> RbRe
         let val = f64::try_convert(float.as_value())?;
         Ok(Expr::Literal(LiteralValue::Dyn(DynLiteralValue::Float(val))).into())
     } else if let Some(rbstr) = RString::from_value(value) {
-        if rbstr.enc_get() == ruby.utf8_encindex() {
-            Ok(dsl::lit(rbstr.to_string()?).into())
+        if rbstr.enc_get() == ruby.ascii8bit_encindex() {
+            let bytes = unsafe { rbstr.as_slice() };
+            match std::str::from_utf8(bytes) {
+                Ok(s) => Ok(dsl::lit(s.to_string()).into()),
+                Err(_) => Ok(dsl::lit(bytes).into()),
+            }
         } else {
-            Ok(dsl::lit(unsafe { rbstr.as_slice() }).into())
+            Ok(dsl::lit(rbstr.to_string()?).into())
         }
     } else if let Ok(series) = <&RbSeries>::try_convert(value) {
         let s = series.clone().series.into_inner();

@@ -129,10 +129,14 @@ pub(crate) fn rb_object_to_any_value<'s>(
     fn get_str(ob: Value, _strict: bool) -> RbResult<AnyValue<'static>> {
         let ruby = Ruby::get_with(ob);
         let v = RString::try_convert(ob)?;
-        if v.enc_get() == ruby.utf8_encindex() {
-            Ok(AnyValue::StringOwned(v.to_string()?.into()))
+        if v.enc_get() == ruby.ascii8bit_encindex() {
+            let bytes = unsafe { v.as_slice() };
+            match std::str::from_utf8(bytes) {
+                Ok(s) => Ok(AnyValue::StringOwned(s.into())),
+                Err(_) => Ok(AnyValue::BinaryOwned(bytes.to_vec())),
+            }
         } else {
-            Ok(AnyValue::BinaryOwned(unsafe { v.as_slice() }.to_vec()))
+            Ok(AnyValue::StringOwned(v.to_string()?.into()))
         }
     }
 

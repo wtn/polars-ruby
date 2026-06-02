@@ -353,6 +353,33 @@ class DataFrameTest < Minitest::Test
     assert_frame({"a" => [1]}, df.filter(!(df["a"] > 1)))
   end
 
+  def test_filter_is_in_non_utf8_encoding
+    df = Polars::DataFrame.new({"symbol" => ["AAPL", "MSFT", "GOOG"]})
+    symbols = ["AAPL"].map { |s| s.dup.force_encoding("US-ASCII") }
+    assert_frame({"symbol" => ["AAPL"]}, df.filter(Polars.col("symbol").is_in(symbols)))
+  end
+
+  def test_filter_is_in_binary_encoding
+    df = Polars::DataFrame.new({"symbol" => ["AAPL", "MSFT", "GOOG"]})
+    symbols = ["AAPL"].map { |s| s.dup.force_encoding("ASCII-8BIT") }
+    assert_frame({"symbol" => ["AAPL"]}, df.filter(Polars.col("symbol").is_in(symbols)))
+  end
+
+  def test_filter_eq_binary_encoding
+    df = Polars::DataFrame.new({"symbol" => ["AAPL", "MSFT", "GOOG"]})
+    needle = "AAPL".dup.force_encoding("ASCII-8BIT")
+    assert_frame({"symbol" => ["AAPL"]}, df.filter(Polars.col("symbol") == needle))
+  end
+
+  def test_join_binary_encoding
+    left = Polars::DataFrame.new({"symbol" => ["AAPL", "MSFT"]})
+    right = Polars::DataFrame.new({
+      "symbol" => ["AAPL"].map { |s| s.dup.force_encoding("ASCII-8BIT") },
+      "px" => [100],
+    })
+    assert_frame({"symbol" => ["AAPL"], "px" => [100]}, left.join(right, on: "symbol"))
+  end
+
   def test_describe
     df = Polars::DataFrame.new({
       "a" => [1.0, 2.8, 3.0],
